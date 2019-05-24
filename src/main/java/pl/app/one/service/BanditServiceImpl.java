@@ -92,11 +92,23 @@ public class BanditServiceImpl implements BanditService {
         });
 
 
+        List<int[]> actualSymbols = shiftReels(actualRno, spins, reels);
+        log.info("Aktualne Symbole: ");
+        actualSymbols.forEach(item->log.info(Arrays.toString(item)));
+
+        //TODO: Check winnings
+        game.setRno(actualRno);
+        game.getSymbolList().add(actualSymbols);
+        game.setWin(game.getWin()+0);
+        return 0;
+    }
+
+    private List<int[]> shiftReels(int actualRno, int[] spins, List<int[]> reels) {
         List<int[]> actualSymbols = new ArrayList<>();
         for(int i = 0; i < spins.length; i++) {
             final int spin = spins[i];
             final int[] reel = reels.get(i);
-            System.out.println("Before "+Arrays.toString(reel));
+            log.info("Before "+ Arrays.toString(reel));
 
             //Określamy położenie walców za pomocą rno
             for (int a = 0; a < actualRno; a++) {
@@ -106,20 +118,13 @@ public class BanditServiceImpl implements BanditService {
                     reel[j - 1] = temp;
                 }
             }
-            System.out.println("After "+Arrays.toString(reel));
+            log.info("After "+Arrays.toString(reel));
 
             //Potem kręcimy walcami o N spinów zdefiniowanych w pliku i pobieramy wyświetlone symbole na maszynce
             actualSymbols.add(Arrays.stream(reel, spin - 3, spin)
                     .toArray());
         }
-        System.out.println("Aktualne Symbole: ");
-        actualSymbols.forEach(item->System.out.println(Arrays.toString(item)));
-
-        //TODO: Check winnings
-        game.setRno(actualRno);
-        game.getSymbolList().add(actualSymbols);
-        game.setWin(game.getWin()+0);
-        return 0;
+        return actualSymbols;
     }
 
     public ResponseDTO endGame(Integer gameId) {
