@@ -37,7 +37,6 @@ Kontrolery
 * Konfiguracja aplikacji
   -
   
-* ### `Walce`
 Lista tablic walców przypisana do jednorękich bandytów
 W każdym walcu przypisane są konkretne symbole od 0 do 7.
 
