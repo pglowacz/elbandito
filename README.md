@@ -13,7 +13,7 @@ Aplikacja jest dostępna na: http://localhost:8080/elbandito
 
 Lub uruchamiamy swoje ulubione środowisko developerskie(Intellij Idea lub inne badziewie) i odpalamy jako Spring boot
   
-Api swaggera: http://localhost:8080/elbandito/swagger-ui.html
+Api swaggera: http://localhost:8080/elbandito/swagger-ui.html lub http://localhost:8080/swagger-ui.html
 
 ---
 
