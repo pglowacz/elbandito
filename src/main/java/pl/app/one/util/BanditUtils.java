@@ -1,5 +1,6 @@
 package pl.app.one.util;
 
+import org.springframework.stereotype.Component;
 import pl.app.one.domain.Game;
 import pl.app.one.dto.enums.GameStatus;
 
@@ -13,10 +14,11 @@ import java.util.function.Predicate;
  *
  * @author Pawel Glowacz
  */
+@Component
 public class BanditUtils {
 
-    private static final int MAX_RNO = 500;
-    private static final int MAX_GAME_ID = 200000000;
+    public static final int MAX_GAME_ID = 200000000;
+    public static final int MAX_RNO = 500;
     private static final int ABANDONED_GAME_TIME = 3 * 60 * 1000;//3 minutes
 
     /**
@@ -24,7 +26,7 @@ public class BanditUtils {
      *
      * @return pozycje walców
      */
-    public static int generateRno(){
+    public int generateRno(){
         Random random = new Random();
         return random.nextInt(MAX_RNO);
     }
@@ -34,7 +36,7 @@ public class BanditUtils {
      *
      * @return id gry
      */
-    public static int generateGameId(){
+    public int generateGameId(){
         Random random = new Random();
         return random.nextInt(MAX_GAME_ID);
     }
@@ -44,7 +46,7 @@ public class BanditUtils {
      *
      * @return aktualny czas
      */
-    public static long timeStamp() {
+    public long timeStamp() {
         return Date.from(Instant.now()).getTime();
     }
 
@@ -54,7 +56,7 @@ public class BanditUtils {
      *
      * @return true jeśli przekroczony w przeciwnym wypadku false
      */
-    public static boolean checkGameIfAbandoned(long timestamp) {
+    public boolean checkGameIfAbandoned(long timestamp) {
         long timestampNow = System.currentTimeMillis() - ABANDONED_GAME_TIME;
         return timestamp < timestampNow;
     }
@@ -64,7 +66,7 @@ public class BanditUtils {
      *
      * @return predykat
      */
-    public static Predicate<Game> gameActivePredicate() {
+    public Predicate<Game> gameActivePredicate() {
         return game -> GameStatus.ACTIVE.equals(game.getGameStatus());
     }
 
@@ -73,7 +75,7 @@ public class BanditUtils {
      *
      * @return predykat
      */
-    public static Predicate<Game> gameAbandonedPredicate() {
+    public Predicate<Game> gameAbandonedPredicate() {
         return game -> GameStatus.ABANDONED.equals(game.getGameStatus());
     }
 
@@ -82,7 +84,7 @@ public class BanditUtils {
      *
      * @return predykat
      */
-    public static Predicate<Game> gameEndPredicate() {
+    public Predicate<Game> gameEndPredicate() {
         return game -> GameStatus.END.equals(game.getGameStatus());
     }
 }

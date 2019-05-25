@@ -21,9 +21,11 @@ import java.util.stream.Collectors;
 public class SessionServiceImpl implements SessionService {
 
     private final BanditDao banditDao;
+    private final BanditUtils banditUtils;
 
-    public SessionServiceImpl(BanditDao banditDao) {
+    public SessionServiceImpl(BanditDao banditDao, BanditUtils banditUtils) {
         this.banditDao = banditDao;
+        this.banditUtils = banditUtils;
     }
 
     /**
@@ -36,13 +38,13 @@ public class SessionServiceImpl implements SessionService {
         List<Game> gameList = banditDao.allGames();
 
         List<Integer> activeGames = gameList.stream().filter(
-                BanditUtils.gameActivePredicate()).map(Game::getGameId).collect(Collectors.toList());
+                banditUtils.gameActivePredicate()).map(Game::getGameId).collect(Collectors.toList());
 
         List<Integer> abandonedGames = gameList.stream().filter(
-                BanditUtils.gameAbandonedPredicate()).map(Game::getGameId).collect(Collectors.toList());
+                banditUtils.gameAbandonedPredicate()).map(Game::getGameId).collect(Collectors.toList());
 
         List<Integer> endGames = gameList.stream().filter(
-                BanditUtils.gameEndPredicate()).map(Game::getGameId).collect(Collectors.toList());
+                banditUtils.gameEndPredicate()).map(Game::getGameId).collect(Collectors.toList());
 
         return SessionResponseDTO.builder()
                 .activeGameList(activeGames)
@@ -55,7 +57,7 @@ public class SessionServiceImpl implements SessionService {
      */
     @Override
     public void endAbandonedGames() {
-        banditDao.allGames().stream().filter(BanditUtils.gameAbandonedPredicate()
+        banditDao.allGames().stream().filter(banditUtils.gameAbandonedPredicate()
         ).forEach(game -> {
             log.info("End game id {} with abandoned status", game.getGameId());
             game.setGameStatus(GameStatus.END);
@@ -68,7 +70,7 @@ public class SessionServiceImpl implements SessionService {
      */
     @Override
     public void removeFinishedGames() {
-        banditDao.allGames().stream().filter(BanditUtils.gameEndPredicate()
+        banditDao.allGames().stream().filter(banditUtils.gameEndPredicate()
         ).forEach(game -> {
             log.info("Remove game id {} with end status from session", game.getGameId());
             banditDao.removeGame(game.getGameId());

@@ -28,10 +28,14 @@ public class BanditServiceImpl implements BanditService {
 
     private final BanditDao banditDao;
     private final BanditSimulationProperties banditSimulationProperties;
+    private final BanditUtils banditUtils;
 
-    public BanditServiceImpl(BanditDao banditDao, BanditSimulationProperties banditSimulationProperties) {
+    public BanditServiceImpl(BanditDao banditDao,
+                             BanditSimulationProperties banditSimulationProperties,
+                             BanditUtils banditUtils) {
         this.banditDao = banditDao;
         this.banditSimulationProperties = banditSimulationProperties;
+        this.banditUtils = banditUtils;
     }
 
     /**
@@ -42,9 +46,9 @@ public class BanditServiceImpl implements BanditService {
     public ResponseDTO startGame() {
         Game game = Game.builder()
                 .gameStatus(GameStatus.ACTIVE)
-                .gameId(BanditUtils.generateGameId())
-                .rno(BanditUtils.generateRno())
-                .lastActualGameTime(BanditUtils.timeStamp())
+                .gameId(banditUtils.generateGameId())
+                .rno(banditUtils.generateRno())
+                .lastActualGameTime(banditUtils.timeStamp())
                 .symbolList(new ArrayList<>())
                 .win(0)
                 .build();
@@ -101,6 +105,7 @@ public class BanditServiceImpl implements BanditService {
         int actualRno = game.getRno()+1;
 
         List<int[]> actualSymbols = shiftReels(actualRno);
+
         log.info("Aktualne Symbole: ");
         actualSymbols.forEach(item->log.info(Arrays.toString(item)));
 
@@ -210,6 +215,7 @@ public class BanditServiceImpl implements BanditService {
                 banditDao.updateGame(game);
                 responseDTO.setResponseStatus(ResponseStatus.OK);
             } else {
+                log.info("Game id: {} "+WRONG_GAME_STATUS_TO_DELETE_BY_USER,gameId);
                 responseDTO.setResponseStatus(ResponseStatus.ERROR);
                 responseDTO.setMessage(WRONG_GAME_STATUS_TO_DELETE_BY_USER);
             }
@@ -235,7 +241,7 @@ public class BanditServiceImpl implements BanditService {
      * @return komunikat
      */
     private ResponseDTO createGeneralResponseGameNotExists(Integer gameId) {
-        log.error("Game id: {}, ",gameId);
+        log.error("Game id: {} "+NO_GAME_EXISTS,gameId);
         return ResponseDTO.builder()
                 .gameId(gameId)
                 .responseStatus(ResponseStatus.ERROR)

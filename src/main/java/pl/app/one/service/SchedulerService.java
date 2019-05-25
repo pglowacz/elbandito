@@ -19,9 +19,11 @@ import pl.app.one.util.BanditUtils;
 public class SchedulerService {
 
     private final BanditDao banditDao;
+    private final BanditUtils banditUtils;
 
-    public SchedulerService(BanditDao banditDao) {
+    public SchedulerService(BanditDao banditDao, BanditUtils banditUtils) {
         this.banditDao = banditDao;
+        this.banditUtils = banditUtils;
     }
 
     /**
@@ -31,9 +33,9 @@ public class SchedulerService {
     public void checkGamesForActivity(){
         log.info("Checking game if abandoned");
         banditDao.allGames().stream().filter(
-                game -> BanditUtils.checkGameIfAbandoned(game.getLastActualGameTime())
-        ).filter(BanditUtils.gameAbandonedPredicate().negate()
-        ).filter(BanditUtils.gameEndPredicate().negate()
+                game -> banditUtils.checkGameIfAbandoned(game.getLastActualGameTime())
+        ).filter(banditUtils.gameAbandonedPredicate().negate()
+        ).filter(banditUtils.gameEndPredicate().negate()
         ).forEach(game -> {
             log.info("Game with id: {} is abandoned",game.getGameId());
             game.setGameStatus(GameStatus.ABANDONED);

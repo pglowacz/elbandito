@@ -17,7 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Repository
 public class BanditDaoImpl implements BanditDao {
+    private final BanditUtils banditUtils;
     private Map<Integer,Game> sessionGames = new ConcurrentHashMap<>();
+
+    public BanditDaoImpl(BanditUtils banditUtils) {
+        this.banditUtils = banditUtils;
+    }
 
     /**
      * Dodaje grę do db.
@@ -40,7 +45,7 @@ public class BanditDaoImpl implements BanditDao {
      */
     @Override
     public Game updateGame(Game game) {
-        game.setLastActualGameTime(BanditUtils.timeStamp());
+        game.setLastActualGameTime(banditUtils.timeStamp());
         return sessionGames.replace(game.getGameId(),game);
     }
 
