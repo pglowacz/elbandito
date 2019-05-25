@@ -11,6 +11,11 @@ import pl.app.one.util.BanditUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Klasa odpowiedzialna za operacje na sesji jednorękich bandytów.
+ *
+ * @author Pawel Glowacz
+ */
 @Service
 @Slf4j
 public class SessionServiceImpl implements SessionService {
@@ -21,6 +26,12 @@ public class SessionServiceImpl implements SessionService {
         this.banditDao = banditDao;
     }
 
+    /**
+     * Wyświetla wszystkie aktualne sesje.
+     *
+     * @return komunikat sesyjny
+     */
+    @Override
     public SessionResponseDTO allSession() {
         List<Game> gameList = banditDao.allGames();
 
@@ -39,6 +50,9 @@ public class SessionServiceImpl implements SessionService {
                 .endGameList(endGames).build();
     }
 
+    /**
+     * Kończy wszystkie porzucone gry.
+     */
     @Override
     public void endAbandonedGames() {
         banditDao.allGames().stream().filter(BanditUtils.gameAbandonedPredicate()
@@ -49,6 +63,9 @@ public class SessionServiceImpl implements SessionService {
         });
     }
 
+    /**
+     * Usuwa wszystkie zakończone gry z sesji
+     */
     @Override
     public void removeFinishedGames() {
         banditDao.allGames().stream().filter(BanditUtils.gameEndPredicate()

@@ -10,24 +10,28 @@ Budowa aplikacji: `mvn clean package`. Operacja tworzy wara o nazwie elbandito.
 Kopiujemy wara do odpowiedniego miejsca w kontenerze webowym.
   
 Aplikacja jest dostępna na: http://localhost:8080/elbandito 
+
+Lub uruchamiamy swoje ulubione środowisko developerskie(Intellij Idea lub inne badziewie) i odpalamy jako Spring boot
   
+Api swaggera: http://localhost:8080/elbandito/swagger-ui.html
+
 ---
 
 Kontrolery 
   -
 * ### `BanditController`
-  `/startGame` - rozpoczyna grę
+  `/startGame` (GET) - rozpoczyna grę
   
-  `/spin` - kręci walcami
+  `/spin` (POST) - kręci walcami 
   
-  `/endGame` - kończy grę
+  `/endGame` (GET) - kończy grę
   
 * ### `SessionController`
-  `/sessions` - sprawdza aktualną sesję jednorękich bandytów
+  `/sessions` (GET) - sprawdza aktualną sesję jednorękich bandytów
   
-  `/finishAbandonedGames` - ustawia status końca gry(**END**), które są w statusie porzucone (**ABANDONED**)
+  `/finishAbandonedGames` (GET) - ustawia status końca gry(**END**), które są w statusie porzucone (**ABANDONED**)
   
-  `/finishEndGames` - usuwa z sesji gry, które posiadają status **END**
+  `/finishEndGames` (GET) - usuwa z sesji gry, które posiadają status **END**
   
 
 * Konfiguracja aplikacji

@@ -8,6 +8,11 @@ import pl.app.one.dao.BanditDao;
 import pl.app.one.dto.enums.GameStatus;
 import pl.app.one.util.BanditUtils;
 
+/**
+ * Klasa odpowiedzialna za sprawdzanie czy gra nie została opuszczona przez gracza.
+ *
+ * @author Pawel Glowacz
+ */
 @Service
 @EnableScheduling
 @Slf4j
@@ -19,6 +24,9 @@ public class SchedulerService {
         this.banditDao = banditDao;
     }
 
+    /**
+     * Sprawdza czy odpowiednie gry nie zostały opuszczone. Sprawdzanie następuje co 30 sekund.
+     */
     @Scheduled(cron = "*/30 * * * * *")
     public void checkGamesForActivity(){
         log.info("Checking game if abandoned");

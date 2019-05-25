@@ -9,6 +9,5 @@ import java.io.Serializable;
 @Builder
 public class SpinRequestDTO implements Serializable {
     private Integer gameId;
-    private Integer rno;
     private Integer bet;
 }

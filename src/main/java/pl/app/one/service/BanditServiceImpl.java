@@ -14,10 +14,14 @@ import pl.app.one.mapper.ResponseDTOMapper;
 import pl.app.one.util.BanditUtils;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static pl.app.one.constant.Constants.*;
 
+/**
+ * Klasa odpowiedzialna za obsługę rozpoczęcia gry, kręcenia walcami, zamknięcia gry
+ *
+ * @author Pawel Glowacz
+ */
 @Service
 @Slf4j
 public class BanditServiceImpl implements BanditService {
@@ -30,6 +34,11 @@ public class BanditServiceImpl implements BanditService {
         this.banditSimulationProperties = banditSimulationProperties;
     }
 
+    /**
+     * Rozpoczyna grę.
+     *
+     * @return informację na temat rozpoczęcia gry
+     */
     public ResponseDTO startGame() {
         Game game = Game.builder()
                 .gameStatus(GameStatus.ACTIVE)
@@ -53,6 +62,13 @@ public class BanditServiceImpl implements BanditService {
         return responseDTO;
     }
 
+    /**
+     * Symuluje "kręcenie" walców
+     *
+     * @param spinRequestDTO informacje jakiej gry dotyczy oraz zakładu
+     *
+     * @return informacje o przeprowadzonym "kręceniu"
+     */
     public SpinResponseDTO spin(SpinRequestDTO spinRequestDTO) {
         Game game = banditDao.getGame(spinRequestDTO.getGameId());
         if(game != null){
@@ -74,6 +90,13 @@ public class BanditServiceImpl implements BanditService {
         return createSpinResponseGameNotExists(spinRequestDTO.getGameId());
     }
 
+    /**
+     * Główna część "kręcenia" walców
+     * @param game pobrana gra z sesji
+     * @param bet zakład
+     *
+     * @return wygrana
+     */
     private int wheelBandit(Game game, Integer bet) {
         int actualRno = game.getRno()+1;
 
@@ -89,6 +112,14 @@ public class BanditServiceImpl implements BanditService {
         return win;
     }
 
+    /**
+     * Sprawdza czy wystąpiła wygrana.
+     *
+     * @param actualSymbols aktualne symbole, które wyświetliły się na jednorękim bandycie
+     * @param bet zakład
+     *
+     * @return wygrana
+     */
     private int checkWinnings(List<int[]> actualSymbols, Integer bet) {
         int[] winnings = Arrays.stream(banditSimulationProperties.getWinnings()).toArray();
 
@@ -105,9 +136,7 @@ public class BanditServiceImpl implements BanditService {
         //Sprawdzamy czy są takie same symbole w określonych liniach.
         for(int[] lineW: winningLineList){
             Set<Integer> sameNumbersInLine = new HashSet<>();
-            Arrays.stream(lineW).forEach(symbolPosition ->{
-                sameNumbersInLine.add(symbols[symbolPosition]);
-            });
+            Arrays.stream(lineW).forEach(symbolPosition -> sameNumbersInLine.add(symbols[symbolPosition]));
             if(sameNumbersInLine.size()==1){
                 log.info("Pozycja linii: {}  posiada 3 takie same symbole: {} ",Arrays.toString(lineW), sameNumbersInLine.toArray()[0]);
                 wonSymbolList.addAll(sameNumbersInLine);
@@ -125,6 +154,13 @@ public class BanditServiceImpl implements BanditService {
         return win;
     }
 
+    /**
+     * Ustawiamy pozycje walców i "kręcimy".
+     *
+     * @param actualRno ilość pozycji, o którą należy przesunać walce
+     *
+     * @return aktualne wyświetlone symbole
+     */
     private List<int[]> shiftReels(int actualRno) {
         int[] spins = Arrays.stream(banditSimulationProperties.getSpin()).toArray();
 
@@ -156,6 +192,13 @@ public class BanditServiceImpl implements BanditService {
         return actualSymbols;
     }
 
+    /**
+     * Kończy grę.
+     *
+     * @param gameId id gry
+     *
+     * @return odpowiedni komunikat
+     */
     public ResponseDTO endGame(Integer gameId) {
         Game game = banditDao.getGame(gameId);
         if(game != null){
@@ -175,10 +218,22 @@ public class BanditServiceImpl implements BanditService {
         return createGeneralResponseGameNotExists(gameId);
     }
 
+    /**
+     * Wrapper - Tworzy odpowiedni komunikat jeśli gra nie istnieje.
+     * @param gameId id gry
+     *
+     * @return komunikat
+     */
     private SpinResponseDTO createSpinResponseGameNotExists(Integer gameId){
         return SpinResponseDTO.builder().responseDTO(createGeneralResponseGameNotExists(gameId)).build();
     }
 
+    /**
+     * Tworzy odpowiedni komunikat jeśli gra nie istnieje.
+     * @param gameId id gry
+     *
+     * @return komunikat
+     */
     private ResponseDTO createGeneralResponseGameNotExists(Integer gameId) {
         log.error("Game id: {}, ",gameId);
         return ResponseDTO.builder()
