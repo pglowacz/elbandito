@@ -1,6 +1,7 @@
 package pl.app.one.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,5 +17,7 @@ import java.util.List;
 public class BanditSimulationProperties {
     private List<int[]> reels;
     private int[] spin;
-    private List<int[]> winnings;
+    private int[] winnings;
+    @JsonProperty("lines_winnings")
+    private List<int[]> linesWinnings;
 }

@@ -13,9 +13,8 @@ import pl.app.one.dto.enums.ResponseStatus;
 import pl.app.one.mapper.ResponseDTOMapper;
 import pl.app.one.util.BanditUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 import static pl.app.one.constant.Constants.*;
 
@@ -60,7 +59,7 @@ public class BanditServiceImpl implements BanditService {
             SpinResponseDTO.SpinResponseDTOBuilder spinResponseDTOBuilder = SpinResponseDTO.builder();
             ResponseDTO responseDTO = ResponseDTOMapper.INSTANCE.gameToResponseDTO(game);
             if(game.getGameStatus() == GameStatus.ACTIVE) {
-                int win = wheelBandit(game);
+                int win = wheelBandit(game, spinRequestDTO.getBet());
                 spinResponseDTOBuilder.symbols(game.getSymbolList().get(game.getSymbolList().size() - 1));
                 spinResponseDTOBuilder.win(win);
                 responseDTO.setResponseStatus(ResponseStatus.OK);
@@ -75,35 +74,65 @@ public class BanditServiceImpl implements BanditService {
         return createSpinResponseGameNotExists(spinRequestDTO.getGameId());
     }
 
-    private int wheelBandit(Game game) {
+    private int wheelBandit(Game game, Integer bet) {
         int actualRno = game.getRno()+1;
 
-        //Copy values from properties
+        List<int[]> actualSymbols = shiftReels(actualRno);
+        log.info("Aktualne Symbole: ");
+        actualSymbols.forEach(item->log.info(Arrays.toString(item)));
+
+        int win = checkWinnings(actualSymbols, bet);
+
+        game.setRno(actualRno);
+        game.getSymbolList().add(actualSymbols);
+        game.setWin(game.getWin()+win);
+        return win;
+    }
+
+    private int checkWinnings(List<int[]> actualSymbols, Integer bet) {
+        int[] winnings = Arrays.stream(banditSimulationProperties.getWinnings()).toArray();
+
+        List<int[]> winningLineList = new ArrayList<>();
+        banditSimulationProperties.getLinesWinnings().forEach(item -> {
+            winningLineList.add(Arrays.stream(item).toArray());
+        });
+
+        //Spłaszczamy strukturę symboli do jednoelementowej tablicy.
+        int[] symbols = actualSymbols.stream().flatMapToInt(Arrays::stream).toArray();
+
+        List<Integer> wonSymbolList = new ArrayList<>();
+
+        //Sprawdzamy czy są takie same symbole w określonych liniach.
+        for(int[] lineW: winningLineList){
+            Set<Integer> sameNumbersInLine = new HashSet<>();
+            Arrays.stream(lineW).forEach(symbolPosition ->{
+                sameNumbersInLine.add(symbols[symbolPosition]);
+            });
+            if(sameNumbersInLine.size()==1){
+                log.info("Pozycja linii: {}  posiada 3 takie same symbole: {} ",Arrays.toString(lineW), sameNumbersInLine.toArray()[0]);
+                wonSymbolList.addAll(sameNumbersInLine);
+            }
+            sameNumbersInLine.clear();
+        }
+
+        int win = 0;
+        if(!wonSymbolList.isEmpty()){
+            for(Integer symbol: wonSymbolList){
+                win =+ bet*winnings[symbol];
+            }
+        }
+        log.info("Wygrana {} ",win);
+        return win;
+    }
+
+    private List<int[]> shiftReels(int actualRno) {
         int[] spins = Arrays.stream(banditSimulationProperties.getSpin()).toArray();
 
         List<int[]> reels = new ArrayList<>();
         banditSimulationProperties.getReels().forEach(item ->{
-           reels.add(Arrays.stream(item).toArray());
+            reels.add(Arrays.stream(item).toArray());
         });
 
-        List<int[]> winningList = new ArrayList<>();
-        banditSimulationProperties.getWinnings().forEach(item -> {
-            winningList.add(Arrays.stream(item).toArray());
-        });
-
-
-        List<int[]> actualSymbols = shiftReels(actualRno, spins, reels);
-        log.info("Aktualne Symbole: ");
-        actualSymbols.forEach(item->log.info(Arrays.toString(item)));
-
-        //TODO: Check winnings
-        game.setRno(actualRno);
-        game.getSymbolList().add(actualSymbols);
-        game.setWin(game.getWin()+0);
-        return 0;
-    }
-
-    private List<int[]> shiftReels(int actualRno, int[] spins, List<int[]> reels) {
         List<int[]> actualSymbols = new ArrayList<>();
         for(int i = 0; i < spins.length; i++) {
             final int spin = spins[i];
@@ -149,6 +178,7 @@ public class BanditServiceImpl implements BanditService {
     private SpinResponseDTO createSpinResponseGameNotExists(Integer gameId){
         return SpinResponseDTO.builder().responseDTO(createGeneralResponseGameNotExists(gameId)).build();
     }
+
     private ResponseDTO createGeneralResponseGameNotExists(Integer gameId) {
         log.error("Game id: {}, ",gameId);
         return ResponseDTO.builder()
