@@ -1,5 +1,7 @@
 package pl.app.one.service;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -11,14 +13,19 @@ import pl.app.one.constant.Constants;
 import pl.app.one.dao.BanditDaoImpl;
 import pl.app.one.domain.Game;
 import pl.app.one.dto.ResponseDTO;
+import pl.app.one.dto.SpinRequestDTO;
+import pl.app.one.dto.SpinResponseDTO;
 import pl.app.one.dto.enums.GameStatus;
 import pl.app.one.dto.enums.ResponseStatus;
 import pl.app.one.util.BanditUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Random;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BanditService tests")
@@ -26,9 +33,6 @@ public class BanditServiceImplTest {
 
     @Mock
     private BanditDaoImpl banditDao;
-
-    @Mock
-    private BanditSimulationProperties banditSimulationProperties;
 
     @Mock
     private BanditUtils banditUtils;
@@ -44,11 +48,11 @@ public class BanditServiceImplTest {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.initMocks(this);
-        this.banditService = new BanditServiceImpl(banditDao, banditSimulationProperties, banditUtils);
+        this.banditService = new BanditServiceImpl(banditDao, banditSimulationProperties(), banditUtils);
 
         this.timestamp = Date.from(Instant.now()).getTime();
-        this.rno = new Random().nextInt(BanditUtils.MAX_RNO);
-        this.gameId = new Random().nextInt(BanditUtils.MAX_GAME_ID);
+        this.rno = 478;
+        this.gameId = 1;
     }
 
     @Test
@@ -80,8 +84,41 @@ public class BanditServiceImplTest {
     }
 
     @Test
-    public void spinTest() {
+    public void spinWinTest() {
+        Game game = createGame(GameStatus.ACTIVE);
+        SpinResponseDTO actualResponseDTO = createSpinResponseDTO(null, false);
+        Mockito.when(banditDao.getGame(this.gameId)).thenReturn(game);
+        Mockito.when(banditDao.updateGame(game)).thenReturn(game);
 
+        SpinResponseDTO expectedSpinResponseDTO = banditService.spin(SpinRequestDTO.builder().bet(2).gameId(1).build());
+
+        int[] expectedArray = expectedSpinResponseDTO.getSymbols().stream().flatMapToInt(Arrays::stream).toArray();
+        int[] actualArray = actualResponseDTO.getSymbols().stream().flatMapToInt(Arrays::stream).toArray();
+        Assertions.assertArrayEquals(expectedArray,actualArray);
+
+        Assertions.assertEquals(expectedSpinResponseDTO.getWin(),actualResponseDTO.getWin());
+    }
+
+    @Test
+    public void spinWrongStatusTest() {
+        Game game = createGame(GameStatus.ABANDONED);
+        SpinResponseDTO actualResponseDTO = createSpinResponseDTO(Constants.WRONG_GAME_STATUS_TO_SPIN_BY_USER, true);
+        Mockito.when(banditDao.getGame(this.gameId)).thenReturn(game);
+
+        SpinResponseDTO expectedSpinDto = banditService.spin(SpinRequestDTO.builder().gameId(this.gameId).bet(2).build());
+
+        Assertions.assertEquals(expectedSpinDto,actualResponseDTO);
+    }
+
+    @Test
+    public void spinGameNotExistsTest() {
+        SpinResponseDTO actualResponseDTO = createSpinResponseDTO(Constants.NO_GAME_EXISTS, true);
+        actualResponseDTO.getResponseDTO().setRno(null);
+        Mockito.when(banditDao.getGame(this.gameId)).thenReturn(null);
+
+        SpinResponseDTO expectedSpinDto = banditService.spin(SpinRequestDTO.builder().gameId(this.gameId).bet(2).build());
+
+        Assertions.assertEquals(expectedSpinDto,actualResponseDTO);
     }
 
     @Test
@@ -133,5 +170,35 @@ public class BanditServiceImplTest {
                 .gameId(this.gameId)
                 .gameStatus(gameStatus)
                 .lastActualGameTime(this.timestamp).build();
+    }
+
+    private BanditSimulationProperties banditSimulationProperties() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
+        try (InputStream inputStream = this.getClass().getResourceAsStream("/configuration.json")) {
+            return objectMapper.readValue(inputStream, BanditSimulationProperties.class);
+        } catch (IOException e) {
+        }
+        return BanditSimulationProperties.builder().build();
+    }
+
+    private SpinResponseDTO createSpinResponseDTO(String message, boolean isError) {
+        ResponseDTO actualResponseDTO = createResponseDTO(isError ? ResponseStatus.ERROR : ResponseStatus.OK,message);
+        return SpinResponseDTO.builder()
+                .responseDTO(actualResponseDTO)
+                .win(isError ? null : 10)
+                .symbols(isError ? null : createSymbols())
+                .build();
+    }
+
+    private List<int[]> createSymbols() {
+        List<int[]> symbolList = new ArrayList<>();
+        int[] symbol1 = {4,4,4};
+        int[] symbol2 = {5,4,3};
+        int[] symbol3 = {7,7,5};
+        symbolList.add(symbol1);
+        symbolList.add(symbol2);
+        symbolList.add(symbol3);
+        return symbolList;
     }
 }
