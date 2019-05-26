@@ -59,7 +59,7 @@ Spiny - o ile symboli każdy walec musi się przekręcić.
     "spin": [6, 10, 14]
 ---    
 Wygrana za takie same symbole w odpowiedniej linii    
-Indeks tablicy przedstawia numer symbolu np: cyfra 3 = indeks 2 = numer symbolu w tablicy reels.
+Indeks tablicy poniżej przedstawia numer symbolu np: cyfra 3(nasz mnożnik, który jest wykorzystywany do powiększania wygranej **bet**) to indeks 2, a nasza 2 to symbol w tablicy reels.
     
     "winnings": [1,12,3,2,5,10,99,1] 
 ---
