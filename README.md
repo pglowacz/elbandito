@@ -17,6 +17,12 @@ Api swaggera: http://localhost:8080/elbandito/swagger-ui.html lub http://localho
 
 ---
 
+Hint
+  -
+  
+  Aplikacja sprawdza co 30 sekund aktywność gry. Jeśli w danej grze brak aktywności ze strony uzytkownika przez 3 minuty to
+  ustawia status na porzucony(**ABANDONED**)
+
 Kontrolery 
   -
 * ### `BanditController`
